@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121512">
+<title>สั่งยำดิวะล่วงหน้า</title>
+<meta name="description" content="สั่งยำลูกชิ้นและชามะลิล่วงหน้า แล้วมารับที่หน้าร้าน เปิด 16:30–20:30">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23f0b44c'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&family=Anuphan:wght@400;500;600&family=Cormorant+Garamond:wght@500;600&display=swap">
+<style>
+/* Layout: one phone-width column over the mountain wallpaper; sticky checkout bar at the bottom. */
+:root {
+  color-scheme: dark;
+  --ground: #121512;
+  --glass: rgba(20, 24, 21, .74);
+  --glass-strong: rgba(18, 21, 19, .93);
+  --line: rgba(255, 255, 255, .12);
+  --ink: #f6f3ec;
+  --muted: #b9b6ab;
+  --honey: #f0b44c;
+  --on-honey: #241703;
+  --moss: #8fbf6a;
+  --moss-bg: rgba(143, 191, 106, .16);
+  --chili: #ef6a55;
+  --chili-bg: rgba(239, 106, 85, .16);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-head: "Kanit", "Anuphan", system-ui, sans-serif;
+  --font-body: "Anuphan", "Kanit", system-ui, -apple-system, sans-serif;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  background: var(--ground) url("mountain.jpg") center / cover fixed no-repeat;
+  -webkit-tap-highlight-color: transparent;
+}
+body::after { content: ""; position: fixed; inset: 0; background: linear-gradient(180deg, rgba(10,12,10,.3), rgba(10,12,10,.82)); z-index: -1; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wrap: balance; }
+
+.wrap {
+  max-width: 560px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 140px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.hero { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.brand { line-height: 1; }
+.brand small { font-family: var(--font-display); font-style: italic; color: var(--muted); font-size: 1.3rem; }
+.brand b { display: block; font-family: var(--font-display); font-size: 2.6rem; font-weight: 600; letter-spacing: .04em; }
+.hero p { margin: 0; color: var(--muted); }
+.hero .promo { color: var(--ink); font-size: 1.05rem; }
+.hero .promo b { color: var(--honey); font-weight: 500; }
+.paybox { display: flex; flex-direction: column; gap: 12px; }
+.paybox h2 { font-size: 1.2rem; }
+.paybox .lead { margin: 0; color: var(--muted); font-size: .9rem; }
+.claimed { display: flex; gap: 10px; align-items: center; background: var(--moss-bg); color: var(--moss); border-radius: 14px; padding: 12px 14px; font-size: .95rem; }
+.sheet .warn { background: rgba(240,180,76,.12); border: 1px solid rgba(240,180,76,.4); border-radius: 12px; padding: 10px 12px; font-size: .88rem; }
+.status { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; font-size: .85rem; background: var(--moss-bg); color: var(--moss); }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.status.closed { background: var(--chili-bg); color: var(--chili); }
+
+.panel { background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
+.panel h2 { font-size: 1.15rem; margin-bottom: 10px; }
+.hint { color: var(--muted); font-size: .85rem; margin: -4px 0 10px; }
+
+.item { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.item img { width: 72px; height: 72px; border-radius: 14px; object-fit: cover; display: block; max-width: 100%; }
+.item .nm { min-width: 0; }
+.item .nm b { display: block; font-family: var(--font-head); font-weight: 500; }
+.item .nm small { color: var(--muted); font-size: .8rem; }
+.item .nm .pr { color: var(--honey); font-family: var(--font-head); }
+.step { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.25); }
+.step button { border: 0; background: transparent; width: 38px; height: 38px; font-size: 1.2rem; color: var(--honey); }
+.step button:disabled { color: var(--muted); opacity: .4; }
+.step span { min-width: 24px; text-align: center; font-weight: 600; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 7px 14px; }
+.chip[aria-pressed="true"] { background: var(--honey); border-color: var(--honey); color: var(--on-honey); }
+.slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.slot { border: 1px solid var(--line); background: rgba(0,0,0,.2); border-radius: 12px; padding: 9px 0; font-family: var(--font-head); }
+.slot[aria-pressed="true"] { background: var(--honey); border-color: var(--honey); color: var(--on-honey); }
+.slot:disabled { opacity: .3; cursor: not-allowed; text-decoration: line-through; }
+
+.fields { display: flex; flex-direction: column; gap: 10px; }
+.fields label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
+.field { width: 100%; border: 1px solid var(--line); background: rgba(0,0,0,.28); border-radius: 12px; padding: 10px 12px; font-size: 16px; }
+.field:invalid:not(:placeholder-shown) { border-color: var(--chili); }
+
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--glass-strong); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line);
+}
+.bar-in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.bar-in .sum { flex: 1; min-width: 0; }
+.bar-in .sum small { display: block; color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-in .sum b { font-family: var(--font-head); font-weight: 500; font-size: 1.4rem; }
+.btn { border: 0; border-radius: 14px; padding: 13px 22px; font-family: var(--font-head); font-size: 1.05rem; background: var(--honey); color: var(--on-honey); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.err { color: var(--chili); font-size: .9rem; }
+
+.closed-box { text-align: center; padding: 28px 18px; }
+.closed-box h2 { font-size: 1.4rem; margin-bottom: 6px; }
+.closed-box p { margin: 0; color: var(--muted); }
+
+/* confirmation */
+.ticket { text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.ticket .lbl { color: var(--muted); font-size: .85rem; letter-spacing: .08em; }
+.ticket .q { font-family: var(--font-head); font-size: 4.2rem; line-height: 1; color: var(--honey); }
+.ticket .pick { font-family: var(--font-head); font-size: 1.2rem; }
+.track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px; width: 100%; }
+.track div { font-size: .78rem; color: var(--muted); padding-top: 8px; border-top: 3px solid var(--line); }
+.track div.on { color: var(--moss); border-color: var(--moss); }
+.state-msg { font-size: 1rem; }
+.state-msg.void { color: var(--chili); }
+.lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.lines li { display: flex; justify-content: space-between; gap: 8px; }
+.lines .tot { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; font-family: var(--font-head); font-size: 1.2rem; }
+.qr { background: #fff; color: #0f2a4a; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.qr .band { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.qr .band img { height: 32px; width: auto; }
+.qr .band span { font-size: .75rem; font-weight: 600; letter-spacing: .08em; color: #13406b; }
+.qr .code { width: 100%; max-width: 240px; aspect-ratio: 1; padding: 8px; border: 1.5px solid #dfe6ee; border-radius: 14px; }
+.qr .code img { width: 100%; height: 100%; display: block; }
+.qr .who { text-align: center; line-height: 1.35; }
+.qr .who b { display: block; font-family: var(--font-head); font-weight: 500; }
+.qr .who small { color: #5b6b7d; }
+.qr .amt { font-family: var(--font-head); font-size: 1.6rem; color: #0f2a4a; }
+.note { color: var(--muted); font-size: .85rem; text-align: center; }
+
+.sheet-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: min(560px, 100%); background: var(--glass-strong); border: 1px solid var(--line); border-radius: 22px 22px 0 0; padding: 20px max(16px, env(safe-area-inset-left, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px; max-height: 90vh; overflow: auto; }
+.sheet h2 { font-size: 1.3rem; }
+.sheet .row { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
+.sheet .row b { color: var(--ink); font-weight: 500; }
+.sheet .acts { display: flex; gap: 10px; }
+.sheet .acts .btn { flex: 1; }
+
+@media (max-width: 380px) { .slots { grid-template-columns: repeat(3, minmax(0, 1fr)); } .brand b { font-size: 2.2rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="brand"><small>yum</small><b>DIWAAAA</b></div>
+    <p class="promo">สั่งออนไลน์ <b>สะดวก รวดเร็ว</b> ไม่ต้องยืนรอคิว มาถึงหยิบได้เลย</p>
+    <p>เปิดรับ <span class="num" id="hours">16:30–20:30</span> · ชำระผ่าน QR ทันทีหลังสั่ง · ออนไลน์ไม่ร่วมรายการคูปอง</p>
+    <span class="status closed" id="shopStatus">กำลังเช็กสถานะร้าน…</span>
+  </header>
+
+  <!-- closed / not configured -->
+  <section class="panel closed-box" id="closedBox" hidden>
+    <h2 id="closedTitle">ตอนนี้ร้านปิดรับออเดอร์ออนไลน์</h2>
+    <p id="closedText">ลองกลับมาใหม่ในช่วงเวลาเปิดร้าน หน้านี้จะอัปเดตเองเมื่อร้านเปิดรับ</p>
+  </section>
+
+  <!-- ordering -->
+  <form id="orderForm" novalidate hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <section class="panel">
+        <h2>ยำลูกชิ้น</h2>
+        <p class="hint">ราคาต่อไม้ · รวมไว้ในถ้วยเดียวกัน</p>
+        <div id="menu-yum"></div>
+      </section>
+      <section class="panel" id="spiceBox" hidden>
+        <h2>ความเผ็ด</h2>
+        <div class="chips" id="spice"></div>
+      </section>
+      <section class="panel">
+        <h2>ชามะลิ</h2>
+        <p class="hint">ราคาต่อแก้ว</p>
+        <div id="menu-tea"></div>
+      </section>
+      <section class="panel">
+        <h2>เวลามารับ</h2>
+        <p class="hint">เลือกเวลาที่จะมารับที่หน้าร้าน (วันนี้)</p>
+        <div class="slots" id="slots"></div>
+      </section>
+      <section class="panel">
+        <h2>ข้อมูลผู้สั่ง</h2>
+        <div class="fields">
+          <label for="cName">ชื่อ (ใช้เรียกตอนรับ)<input class="field" id="cName" autocomplete="given-name" maxlength="40" required placeholder="เช่น เนเน่"></label>
+          <label for="cPhone">เบอร์โทร<input class="field num" id="cPhone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="12" required pattern="0[0-9]{8,9}" placeholder="0812345678"></label>
+          <label for="cNote">หมายเหตุ (ไม่บังคับ)<textarea class="field" id="cNote" rows="2" maxlength="120" placeholder="เช่น ไม่ใส่แครอท"></textarea></label>
+        </div>
+      </section>
+      <p class="err" id="formErr" role="alert"></p>
+    </div>
+  </form>
+
+  <!-- confirmation / live status -->
+  <section id="doneView" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="panel ticket">
+      <span class="lbl">เลขคิวออนไลน์ของคุณ</span>
+      <span class="q num" id="dQueue">#101</span>
+      <span class="pick num" id="dPick">มารับ 17:30</span>
+      <span class="state-msg" id="dState"></span>
+      <div class="track"><div id="t1">ชำระเงิน</div><div id="t2">พร้อมรับ</div><div id="t3">รับแล้ว</div></div>
+    </div>
+    <div class="panel paybox" id="dPay">
+      <h2>ขั้นตอนสุดท้าย: โอนชำระทันที</h2>
+      <p class="lead">สแกน QR ด้วยแอปธนาคาร ใส่ยอดให้ตรง แล้วกด "โอนแล้ว" ร้านจะเริ่มทำเมื่อได้รับยอด</p>
+      <div class="qr">
+        <div class="band"><img src="promptpay-logo.png" alt="PromptPay"><span>THAI QR PAYMENT</span></div>
+        <div class="code"><img src="promptpay-code.png" alt="QR พร้อมเพย์ร้านยำดิวะ"></div>
+        <div class="amt num" id="dAmt">฿0</div>
+        <div class="who"><b>MS PATCHARIDA PLONGPAN</b><small>พร้อมเพย์ 095-xxx-8897 · Bangkok Bank</small></div>
+      </div>
+      <button class="btn" id="claimPaid" type="button">โอนแล้ว แจ้งร้าน</button>
+    </div>
+    <div class="claimed" id="dClaimed" hidden>✓ แจ้งโอนแล้ว ร้านกำลังตรวจยอด เก็บสลิปไว้แสดงตอนรับด้วยนะ</div>
+    <div class="panel">
+      <h2>รายการที่สั่ง</h2>
+      <ul class="lines" id="dLines"></ul>
+    </div>
+    <p class="note">แสดงเลขคิวและสลิปตอนมารับ · เก็บหน้านี้ไว้ได้ สถานะจะอัปเดตเอง</p>
+    <button class="btn ghost" id="newOrder" type="button">สั่งออเดอร์ใหม่</button>
+  </section>
+</div>
+
+<div class="bar" id="bar" hidden>
+  <div class="bar-in">
+    <div class="sum"><small id="barInfo">ยังไม่ได้เลือกเมนู</small><b class="num" id="barTotal">฿0</b></div>
+    <button class="btn" id="review" type="button" disabled>สั่งเลย</button>
+  </div>
+</div>
+
+<div class="sheet-scrim" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">ยืนยันออเดอร์</h2>
+    <ul class="lines" id="sLines"></ul>
+    <div class="row"><span>มารับเวลา</span><b class="num" id="sPick"></b></div>
+    <div class="row"><span>ชื่อ / เบอร์</span><b id="sWho"></b></div>
+    <div class="warn">หลังกดยืนยัน ต้องโอนผ่าน QR ทันที ร้านจะเริ่มทำเมื่อได้รับยอดแล้ว</div>
+    <p class="err" id="sErr" role="alert"></p>
+    <div class="acts"><button class="btn ghost" id="sBack" type="button">แก้ไข</button><button class="btn" id="sSend" type="button">ยืนยันและไปชำระเงิน</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+  const IMG = { crab: "yum.jpg", red: "yum.jpg", lava: "yum.jpg", pork: "yum.jpg", chicken: "yum.jpg", jasmine: "jasmine.jpg", honey: "honey.jpg" };
+  const FALLBACK_MENU = [
+    { id: "crab", name: "ปูอัด", cat: "yum", price: 15 }, { id: "red", name: "ไส้กรอกแดง", cat: "yum", price: 15 },
+    { id: "lava", name: "ไส้กรอกชีสลาวา", cat: "yum", price: 20 }, { id: "pork", name: "ลูกชิ้นหมู", cat: "yum", price: 15 },
+    { id: "chicken", name: "ลูกชิ้นไก่", cat: "yum", price: 15 }, { id: "jasmine", name: "ชามะลิ", cat: "tea", price: 25 },
+    { id: "honey", name: "ชามะลิน้ำผึ้งมะนาว", cat: "tea", price: 30 }
+  ];
+  const SPICE = ["ไม่เผ็ด", "เผ็ดน้อย", "เผ็ดกลาง", "เผ็ดมาก"];
+  const ERR = {
+    SHOP_CLOSED: "ร้านเพิ่งปิดรับออเดอร์ออนไลน์ ขออภัยด้วย",
+    BAD_TIME: "เวลารับไม่อยู่ในช่วงเปิดร้าน เลือกเวลาใหม่",
+    TIME_PASSED: "เวลานี้ใกล้เกินไปแล้ว เลือกเวลาที่ช้ากว่านี้",
+    BAD_CONTACT: "ตรวจชื่อและเบอร์โทรอีกครั้ง",
+    BAD_ITEM: "มีเมนูที่หมดหรือไม่ถูกต้อง ลองรีเฟรชหน้า",
+    EMPTY: "ยังไม่ได้เลือกเมนู",
+    TOO_MANY: "เบอร์นี้มีออเดอร์ที่ยังไม่ได้รับ 3 รายการแล้ว",
+    QUEUE_FULL: "วันนี้คิวออนไลน์เต็มแล้ว"
+  };
+  const LAST = "yumdiwa-last-order";
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const baht = v => "฿" + Number(v || 0).toLocaleString("th-TH", { maximumFractionDigits: 2 });
+  const toMin = hm => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
+  const toHM = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+  function bkk() {
+    const p = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+    const g = t => p.find(x => x.type === t).value;
+    return { date: g("year") + "-" + g("month") + "-" + g("day"), mins: +g("hour") * 60 + +g("minute") };
+  }
+
+  let sb = null;
+  let menu = FALLBACK_MENU;
+  let settings = { online_open: false, open_from: "16:30", open_until: "20:30" };
+  let cart = {};
+  let spice = "เผ็ดกลาง";
+  let pickup = "";
+  let doneId = null;
+  let pollT = null;
+
+  /* ---------- slots ---------- */
+  function slotList() {
+    const from = toMin(settings.open_from), until = toMin(settings.open_until), earliest = bkk().mins + 15;
+    const out = [];
+    for (let m = from; m <= until; m += 15) out.push({ hm: toHM(m), ok: m >= earliest });
+    return out;
+  }
+  const anySlot = () => slotList().some(s => s.ok);
+
+  /* ---------- render ---------- */
+  function renderShop() {
+    $("hours").textContent = settings.open_from + "–" + settings.open_until;
+    const open = !!settings.online_open && anySlot();
+    const st = $("shopStatus");
+    st.textContent = settings.online_open ? (open ? "เปิดรับออเดอร์ออนไลน์" : "วันนี้หมดรอบรับแล้ว") : "ปิดรับออเดอร์ออนไลน์";
+    st.classList.toggle("closed", !open);
+    if (doneId) { $("closedBox").hidden = true; $("orderForm").hidden = true; $("bar").hidden = true; return; }
+    $("closedBox").hidden = open;
+    if (!open) {
+      $("closedTitle").textContent = settings.online_open ? "วันนี้หมดรอบรับแล้ว" : "ตอนนี้ร้านปิดรับออเดอร์ออนไลน์";
+      $("closedText").textContent = settings.online_open ? "รอบรับสุดท้ายคือ " + settings.open_until + " น. แวะมาใหม่พรุ่งนี้นะ" : "หน้านี้จะเปิดให้สั่งเองอัตโนมัติเมื่อร้านเปิดรับ";
+    }
+    $("orderForm").hidden = !open; $("bar").hidden = !open;
+    if (open) { renderMenu(); renderSlots(); renderBar(); }
+  }
+  function renderMenu() {
+    ["yum", "tea"].forEach(cat => {
+      $("menu-" + cat).innerHTML = menu.filter(m => m.cat === cat).map(m => {
+        const q = cart[m.id] || 0;
+        return `<div class="item">
+          <img src="${IMG[m.id] || "yum.jpg"}" alt="" loading="lazy">
+          <div class="nm"><b>${esc(m.name)}</b><span class="pr num">${baht(m.price)}</span> <small>/ ${cat === "yum" ? "ไม้" : "แก้ว"}</small></div>
+          <div class="step"><button type="button" data-dec="${m.id}" ${q ? "" : "disabled"} aria-label="ลด ${esc(m.name)}">−</button><span class="num">${q}</span><button type="button" data-inc="${m.id}" aria-label="เพิ่ม ${esc(m.name)}">+</button></div>
+        </div>`;
+      }).join("");
+    });
+    const hasYum = menu.some(m => m.cat === "yum" && cart[m.id]);
+    $("spiceBox").hidden = !hasYum;
+    $("spice").innerHTML = SPICE.map(s => `<button type="button" class="chip" data-spice="${s}" aria-pressed="${s === spice}">${s}</button>`).join("");
+  }
+  function renderSlots() {
+    const list = slotList();
+    if (pickup && !list.find(s => s.hm === pickup && s.ok)) pickup = "";
+    $("slots").innerHTML = list.map(s => `<button type="button" class="slot num" data-slot="${s.hm}" aria-pressed="${s.hm === pickup}" ${s.ok ? "" : "disabled"}>${s.hm}</button>`).join("");
+  }
+  const lines = () => menu.filter(m => cart[m.id] > 0).map(m => ({ ...m, qty: cart[m.id] }));
+  const total = () => lines().reduce((a, l) => a + l.price * l.qty, 0);
+  function renderBar() {
+    const ls = lines(); const n = ls.reduce((a, l) => a + l.qty, 0);
+    $("barTotal").textContent = baht(total());
+    $("barInfo").textContent = n ? n + " รายการ" + (pickup ? " · รับ " + pickup : " · ยังไม่ได้เลือกเวลารับ") : "ยังไม่ได้เลือกเมนู";
+    $("review").disabled = !n;
+  }
+
+  /* ---------- submit ---------- */
+  function validate() {
+    if (!lines().length) return "เลือกเมนูอย่างน้อย 1 อย่าง";
+    if (!pickup) return "เลือกเวลามารับ";
+    if (!$("cName").value.trim()) return "ใส่ชื่อสำหรับเรียกตอนรับ";
+    if (!/^0\d{8,9}$/.test($("cPhone").value.replace(/\D/g, ""))) return "ใส่เบอร์โทร 9–10 หลัก ขึ้นต้นด้วย 0";
+    return "";
+  }
+  function openSheet() {
+    const e = validate(); $("formErr").textContent = e;
+    if (e) { $("formErr").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    const ls = lines();
+    $("sLines").innerHTML = ls.map(l => `<li><span>${esc(l.name)} × ${l.qty}</span><span class="num">${baht(l.price * l.qty)}</span></li>`).join("") +
+      (ls.some(l => l.cat === "yum") ? `<li style="color:var(--muted)"><span>ความเผ็ด</span><span>${esc(spice)}</span></li>` : "") +
+      `<li class="tot"><span>รวม</span><span class="num">${baht(total())}</span></li>`;
+    $("sPick").textContent = "วันนี้ " + pickup + " น.";
+    $("sWho").textContent = $("cName").value.trim() + " · " + $("cPhone").value.replace(/\D/g, "");
+    $("sErr").textContent = ""; $("sSend").disabled = false;
+    $("sheet").hidden = false;
+  }
+  async function send() {
+    $("sSend").disabled = true; $("sErr").textContent = "กำลังส่งออเดอร์…";
+    const ls = lines();
+    const { data, error } = await sb.rpc("place_online_order", {
+      p_items: ls.map(l => ({ id: l.id, qty: l.qty })),
+      p_pickup: pickup, p_name: $("cName").value.trim(), p_phone: $("cPhone").value.replace(/\D/g, ""),
+      p_note: $("cNote").value.trim(), p_spice: ls.some(l => l.cat === "yum") ? spice : ""
+    });
+    if (error) {
+      const code = Object.keys(ERR).find(k => (error.message || "").includes(k));
+      $("sErr").textContent = code ? ERR[code] : "ส่งออเดอร์ไม่สำเร็จ ลองใหม่อีกครั้ง";
+      $("sSend").disabled = false;
+      if (code === "SHOP_CLOSED" || code === "TIME_PASSED") loadSettings();
+      return;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    try { localStorage.setItem(LAST, JSON.stringify({ id: row.out_id, date: bkk().date })); } catch (e) {}
+    cart = {}; pickup = ""; $("cNote").value = "";
+    $("sheet").hidden = true;
+    showDone(row.out_id);
+  }
+
+  /* ---------- confirmation + live status ---------- */
+  async function showDone(id) {
+    doneId = id;
+    $("doneView").hidden = false; renderShop();
+    window.scrollTo(0, 0);
+    await refreshStatus();
+    clearInterval(pollT); pollT = setInterval(refreshStatus, 15000);
+  }
+  async function refreshStatus() {
+    if (!doneId) return;
+    const { data, error } = await sb.rpc("get_online_order", { p_id: doneId });
+    const o = !error && Array.isArray(data) ? data[0] : null;
+    if (!o) { if (!error) leaveDone(); return; }
+    $("dQueue").textContent = "#" + o.out_queue;
+    $("dPick").textContent = "มารับวันนี้ " + o.out_pickup + " น. · " + (o.out_name || "");
+    $("dAmt").textContent = baht(o.out_total);
+    $("dLines").innerHTML = (o.out_items || []).map(i => `<li><span>${esc(i.name)} × ${i.qty}</span><span class="num">${baht(i.price * i.qty)}</span></li>`).join("") +
+      `<li class="tot"><span>ยอดชำระ</span><span class="num">${baht(o.out_total)}</span></li>`;
+    const paid = o.out_status === "paid", ready = o.out_ready || paid, voided = o.out_status === "void", claimed = !!o.out_claimed || paid;
+    $("t1").className = claimed && !voided ? "on" : ""; $("t2").className = ready ? "on" : ""; $("t3").className = paid ? "on" : "";
+    const msg = $("dState");
+    msg.className = "state-msg" + (voided ? " void" : "");
+    msg.textContent = voided ? "ออเดอร์นี้ถูกยกเลิก ติดต่อที่หน้าร้าน" : paid ? "รับออเดอร์เรียบร้อย ขอบคุณที่อุดหนุน" : ready ? "ทำเสร็จแล้ว มารับที่หน้าร้านได้เลย" : claimed ? "ได้รับแจ้งโอนแล้ว ร้านจะทำให้ทันเวลารับ" : "รอโอนชำระ ร้านจะเริ่มทำเมื่อได้รับยอด";
+    $("dPay").hidden = claimed || voided;
+    $("dClaimed").hidden = !claimed || paid || voided;
+    if (paid || voided) { clearInterval(pollT); try { localStorage.removeItem(LAST); } catch (e) {} }
+  }
+  async function claimPaid() {
+    const b = $("claimPaid"); b.disabled = true; b.textContent = "กำลังแจ้งร้าน…";
+    const { error } = await sb.rpc("mark_online_paid", { p_id: doneId });
+    b.disabled = false; b.textContent = "โอนแล้ว แจ้งร้าน";
+    if (error) { alertText("แจ้งไม่สำเร็จ ลองอีกครั้ง"); return; }
+    refreshStatus();
+  }
+  function alertText(m) { const p = $("dPay").querySelector(".lead"); p.textContent = m; p.style.color = "var(--chili)"; }
+  function leaveDone() {
+    doneId = null; clearInterval(pollT);
+    try { localStorage.removeItem(LAST); } catch (e) {}
+    $("doneView").hidden = true; renderShop();
+  }
+
+  /* ---------- data ---------- */
+  async function loadSettings() {
+    const { data, error } = await sb.from("settings").select("online_open, open_from, open_until").eq("id", 1).maybeSingle();
+    if (!error && data) settings = data;
+    renderShop();
+  }
+  async function loadMenu() {
+    const { data, error } = await sb.from("menu").select("id, name, cat, price, available, sort").order("sort");
+    if (!error && data && data.length) menu = data.filter(m => m.available).map(m => ({ ...m, price: Number(m.price) }));
+  }
+
+  async function init() {
+    const cfg = window.YUMDIWA_CONFIG || {};
+    if (!window.supabase || !cfg.SUPABASE_URL || String(cfg.SUPABASE_URL).includes("YOUR-") || !cfg.SUPABASE_ANON_KEY || String(cfg.SUPABASE_ANON_KEY).includes("YOUR-")) {
+      $("shopStatus").textContent = "ยังไม่ได้ตั้งค่าระบบ";
+      $("closedBox").hidden = false; $("closedTitle").textContent = "ระบบสั่งออนไลน์ยังไม่พร้อม"; $("closedText").textContent = "ร้านยังไม่ได้เชื่อมฐานข้อมูล";
+      return;
+    }
+    sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    await loadMenu();
+    await loadSettings();
+    sb.channel("shop-settings")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "settings" }, p => { settings = p.new; renderShop(); })
+      .subscribe();
+    setInterval(() => { loadSettings(); }, 60000);          // also rolls the time slots forward
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { loadSettings(); refreshStatus(); } });
+    try {
+      const last = JSON.parse(localStorage.getItem(LAST) || "null");
+      if (last && last.id && last.date === bkk().date) showDone(last.id);
+    } catch (e) {}
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) { if (e.target === $("sheet")) $("sheet").hidden = true; return; }
+    const d = t.dataset;
+    if (d.inc) { cart[d.inc] = Math.min(50, (cart[d.inc] || 0) + 1); renderMenu(); renderBar(); return; }
+    if (d.dec) { cart[d.dec] = Math.max(0, (cart[d.dec] || 0) - 1); renderMenu(); renderBar(); return; }
+    if (d.spice) { spice = d.spice; renderMenu(); return; }
+    if (d.slot) { pickup = d.slot; renderSlots(); renderBar(); $("formErr").textContent = ""; return; }
+    if (t.id === "review") return openSheet();
+    if (t.id === "sBack") { $("sheet").hidden = true; return; }
+    if (t.id === "sSend") return send();
+    if (t.id === "newOrder") return leaveDone();
+    if (t.id === "claimPaid") return claimPaid();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") $("sheet").hidden = true; });
+  $("orderForm").addEventListener("submit", e => { e.preventDefault(); openSheet(); });
+
+  init();
+})();
+</script>
+</body>
+</html>
