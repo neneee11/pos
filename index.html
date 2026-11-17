@@ -339,6 +339,10 @@ main {
 @media (max-width: 760px) { .switch span { font-size: .78rem; } .top-row { gap: 8px; } .alerts { top: calc(env(safe-area-inset-top, 0px) + 96px); } }
 @media (max-width: 1320px) { .clock { display: none; } }
 .ticket-o .acts .btn { flex: 1 1 auto; white-space: nowrap; }
+.receipt-preview { padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.18); }
+.receipt-preview b { display: block; margin-bottom: 8px; font-weight: 500; color: var(--muted); font-size: .84rem; }
+.receipt-preview img { display: block; width: 100%; max-height: 260px; object-fit: contain; border-radius: 8px; background: #fff; }
+.receipt-preview .receipt-loading { color: var(--muted); font-size: .85rem; }
 .logout { border: 0; background: transparent; color: var(--muted); font-size: .8rem; text-decoration: underline; padding: 4px; }
 .login label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
 .login .err { color: var(--chili); font-size: .88rem; min-height: 1.2em; }
@@ -726,6 +730,24 @@ main {
   }
 
   /* ---------- render: orders ---------- */
+  const receiptPreviewUrls = new Map();
+  const receiptPreviewPending = new Set();
+  function loadReceiptPreview(path) {
+    const cached = receiptPreviewUrls.get(path);
+    if ((cached && cached.expiresAt > Date.now()) || receiptPreviewPending.has(path)) return;
+    receiptPreviewPending.add(path);
+    sb.storage.from("payment-receipts").createSignedUrl(path, 3600).then(({ data, error }) => {
+      receiptPreviewPending.delete(path);
+      receiptPreviewUrls.set(path, error || !data?.signedUrl
+        ? { error: true, expiresAt: Date.now() + 30000 }
+        : { url: data.signedUrl, expiresAt: Date.now() + 55 * 60 * 1000 });
+      if (view === "orders") renderOrders();
+    }).catch(() => {
+      receiptPreviewPending.delete(path);
+      receiptPreviewUrls.set(path, { error: true, expiresAt: Date.now() + 30000 });
+      if (view === "orders") renderOrders();
+    });
+  }
   function renderOrders() {
     const t = todays();
     const paid = t.filter(o => o.status === "paid");
@@ -747,6 +769,7 @@ main {
     const empty = { open: "ไม่มีออเดอร์หน้าร้านค้าง", online: "ไม่มีออเดอร์ออนไลน์รอรับ", paid: "ยังไม่มีบิลที่ปิดวันนี้", void: "ไม่มีออเดอร์ที่ยกเลิกวันนี้" };
     $("orderList").innerHTML = list.length ? list.map(o => {
       const online = o.source === "online";
+      const receipt = online && o.receiptPath ? receiptPreviewUrls.get(o.receiptPath) : null;
       return `
       <div class="ticket-o panel${online ? " is-online" : ""}">
         <header><span class="qno num">${qLabel(o)}</span><span class="tags">${online ? `<span class="pill web">ออนไลน์</span>${o.status === "open" ? (o.customerPaidAt ? `<span class="pill paid" style="margin-right:6px">แจ้งโอนแล้ว ${hhmm(o.customerPaidAt)}</span>` : `<span class="pill open" style="margin-right:6px">ยังไม่โอน</span>`) : ""}` : ""}<span class="pill ${o.status}${o.readyAt && o.status === "open" ? " ready" : ""}">${label(o)}</span></span></header>
@@ -757,6 +780,7 @@ main {
         <ul>${(o.items || []).map(i => `<li><span>${esc(i.name)} × ${n(i.qty)}</span><span class="num">${baht(n(i.price) * n(i.qty))}</span></li>`).join("")}</ul>
         ${n(o.discount) > 0 ? `<div class="sub" style="color:var(--moss)">คูปอง ${esc(o.couponLabel)} −${baht(o.discount)}</div>` : ""}
         <div class="tot"><span>ยอดชำระ</span><span class="num">${baht(o.total)}</span></div>
+        ${online && o.receiptPath ? `<div class="receipt-preview"><b>สลิปที่ลูกค้าแนบ</b>${receipt?.url ? `<img src="${esc(receipt.url)}" alt="สลิปชำระเงินคิว ${qLabel(o)}">` : `<span class="receipt-loading">${receipt?.error ? "โหลดสลิปไม่สำเร็จ ลองกดดูสลิปอีกครั้ง" : "กำลังโหลดสลิป…"}</span>`}</div>` : ""}
         ${o.status === "paid" ? `<div class="sub">ชำระผ่าน QR พร้อมเพย์</div>` : ""}
         ${o.status === "open" ? `<div class="acts">
           <button class="btn danger sm" data-void="${o.id}">ยกเลิก</button>
@@ -765,6 +789,7 @@ main {
           <button class="btn sm" data-pay="${o.id}">${online && o.customerPaidAt ? "ตรวจยอดแล้ว ปิดบิล" : "QR / ปิดบิล"}</button></div>` : ""}
       </div>`;
     }).join("") : `<div class="empty panel">${empty[orderFilter] || ""}</div>`;
+    if (sb) list.filter(o => o.source === "online" && o.receiptPath).forEach(o => loadReceiptPreview(o.receiptPath));
   }
 
   /* ---------- online switch + incoming alerts ---------- */
