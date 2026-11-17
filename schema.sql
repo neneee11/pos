@@ -31,16 +31,63 @@ alter table public.orders add column if not exists customer_phone text;
 alter table public.orders add column if not exists ready_at       timestamptz;
 alter table public.orders add column if not exists customer_paid_at timestamptz;   -- customer tapped "โอนแล้ว"
 alter table public.orders add column if not exists receipt_path text;
+alter table public.orders add column if not exists customer_id uuid references auth.users(id) on delete set null;
 create index if not exists orders_date_idx on public.orders (date);
+create index if not exists orders_customer_id_created_at_idx on public.orders (customer_id, created_at desc);
+
+------------------------------------------------------------
+-- 1b) Staff allowlist. Existing Auth users become staff once; new signups are customers.
+-- To add future staff, insert their Auth user ID into public.staff_accounts from SQL Editor.
+------------------------------------------------------------
+create table if not exists public.staff_accounts (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  added_at timestamptz not null default now()
+);
+create table if not exists public.yumdiwa_schema_migrations (
+  name text primary key,
+  applied_at timestamptz not null default now()
+);
+alter table public.staff_accounts enable row level security;
+alter table public.yumdiwa_schema_migrations enable row level security;
+revoke all on public.staff_accounts, public.yumdiwa_schema_migrations from public, anon, authenticated;
+do $$ begin
+  if not exists (select 1 from public.yumdiwa_schema_migrations where name = 'seed_existing_staff_accounts') then
+    insert into public.staff_accounts (user_id)
+      select id from auth.users on conflict (user_id) do nothing;
+    insert into public.yumdiwa_schema_migrations (name) values ('seed_existing_staff_accounts');
+  end if;
+end $$;
+create or replace function public.is_staff()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.staff_accounts where user_id = auth.uid());
+$$;
+revoke all on function public.is_staff() from public;
+grant execute on function public.is_staff() to authenticated;
+create or replace function public.customer_auth_ready()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.yumdiwa_schema_migrations where name = 'seed_existing_staff_accounts')
+     and exists (select 1 from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'orders' and policyname = 'staff read and customer history')
+     and exists (select 1 from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'settings' and policyname = 'staff updates settings')
+     and exists (select 1 from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'menu' and policyname = 'staff edits menu')
+     and exists (select 1 from pg_catalog.pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'customer upload payment slips')
+     and exists (select 1 from pg_catalog.pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'staff read payment slips');
+$$;
+revoke all on function public.customer_auth_ready() from public;
+grant execute on function public.customer_auth_ready() to anon, authenticated;
 
 alter table public.orders enable row level security;
 drop policy if exists "staff read"   on public.orders;
 drop policy if exists "staff insert" on public.orders;
 drop policy if exists "staff update" on public.orders;
-create policy "staff read"   on public.orders for select to authenticated using (true);
-create policy "staff insert" on public.orders for insert to authenticated with check (true);
-create policy "staff update" on public.orders for update to authenticated using (true) with check (true);
--- Customers (anon) get NO direct access to orders. They go through the two functions below.
+drop policy if exists "staff delete" on public.orders;
+drop policy if exists "staff read and customer history" on public.orders;
+create policy "staff read and customer history" on public.orders for select to authenticated
+  using (public.is_staff() or customer_id = auth.uid());
+create policy "staff insert" on public.orders for insert to authenticated with check (public.is_staff());
+create policy "staff update" on public.orders for update to authenticated using (public.is_staff()) with check (public.is_staff());
+create policy "staff delete" on public.orders for delete to authenticated using (public.is_staff());
+grant select, insert, update, delete on public.orders to authenticated;
+-- Customers read only their own orders; customer order creation/status still goes through RPCs.
 revoke all on public.orders from anon;
 
 ------------------------------------------------------------
@@ -63,7 +110,7 @@ alter table public.settings enable row level security;
 drop policy if exists "anyone reads settings" on public.settings;
 drop policy if exists "staff updates settings" on public.settings;
 create policy "anyone reads settings"  on public.settings for select to anon, authenticated using (true);
-create policy "staff updates settings" on public.settings for update to authenticated using (true) with check (true);
+create policy "staff updates settings" on public.settings for update to authenticated using (public.is_staff()) with check (public.is_staff());
 
 ------------------------------------------------------------
 -- 2b) Private storage for customer payment slips
@@ -75,12 +122,17 @@ on conflict (id) do update set public = false, file_size_limit = 5242880,
 drop policy if exists "customer upload payment slips" on storage.objects;
 drop policy if exists "staff read payment slips" on storage.objects;
 create policy "customer upload payment slips" on storage.objects
-  for insert to anon with check (
+  for insert to authenticated with check (
     bucket_id = 'payment-receipts'
     and name ~ '^[0-9a-fA-F-]{36}/[0-9a-fA-F-]{36}\.(jpg|png|webp)$'
+    and exists (
+      select 1 from public.orders o
+      where o.id::text = split_part(name, '/', 1)
+        and o.customer_id = auth.uid() and o.status = 'open'
+    )
   );
 create policy "staff read payment slips" on storage.objects
-  for select to authenticated using (bucket_id = 'payment-receipts');
+  for select to authenticated using (bucket_id = 'payment-receipts' and public.is_staff());
 
 ------------------------------------------------------------
 -- 3) Menu: prices for online orders are always taken from here, never from the customer's browser
@@ -106,7 +158,7 @@ alter table public.menu enable row level security;
 drop policy if exists "anyone reads menu" on public.menu;
 drop policy if exists "staff edits menu" on public.menu;
 create policy "anyone reads menu" on public.menu for select to anon, authenticated using (true);
-create policy "staff edits menu"  on public.menu for update to authenticated using (true) with check (true);
+create policy "staff edits menu"  on public.menu for update to authenticated using (public.is_staff()) with check (public.is_staff());
 
 ------------------------------------------------------------
 -- 4) Customer places an online order (checks open switch, hours, prices, queue number)
@@ -133,6 +185,7 @@ declare
   v_open_orders integer;
   r record; m record;
 begin
+  if auth.uid() is null then raise exception 'LOGIN_REQUIRED'; end if;
   select * into v_set from public.settings where id = 1;
   if not coalesce(v_set.online_open, false) then raise exception 'SHOP_CLOSED'; end if;
   if p_pickup is null or p_pickup !~ '^\d{2}:\d{2}$'
@@ -160,11 +213,11 @@ begin
   if v_q > 999 then raise exception 'QUEUE_FULL'; end if;
 
   insert into public.orders (queue, date, status, source, items, spice, note, subtotal, discount, total,
-                             pickup_time, customer_name, customer_phone, created_by)
+                             pickup_time, customer_name, customer_phone, created_by, customer_id)
   values (v_q, v_date, 'open', 'online', v_items,
           case when v_hasyum then left(coalesce(p_spice, ''), 20) else '' end,
           left(coalesce(p_note, ''), 120), v_sub, 0, v_sub,
-          p_pickup, left(trim(p_name), 40), p_phone, null)
+          p_pickup, left(trim(p_name), 40), p_phone, auth.uid(), auth.uid())
   returning id into v_id;
 
   return query select v_id, v_q, v_sub, p_pickup;
@@ -179,7 +232,8 @@ returns table (out_queue integer, out_status text, out_pickup text, out_total nu
                out_items jsonb, out_ready boolean, out_date text, out_name text, out_claimed boolean)
 language sql security definer set search_path = public as $$
   select o.queue, o.status, o.pickup_time, o.total, o.items, o.ready_at is not null, o.date, o.customer_name, o.customer_paid_at is not null
-  from public.orders o where o.id = p_id and o.source = 'online';
+  from public.orders o where o.id = p_id and o.source = 'online'
+   and (o.customer_id = auth.uid() or public.is_staff());
 $$;
 
 ------------------------------------------------------------
@@ -190,6 +244,7 @@ create or replace function public.mark_online_paid(p_id uuid, p_receipt_path tex
 returns boolean
 language plpgsql security definer set search_path = public as $$
 begin
+  if auth.uid() is null then raise exception 'LOGIN_REQUIRED'; end if;
   if p_receipt_path is null or split_part(p_receipt_path, '/', 1) <> p_id::text then
     raise exception 'RECEIPT_REQUIRED';
   end if;
@@ -201,16 +256,20 @@ begin
   end if;
   update public.orders
      set customer_paid_at = coalesce(customer_paid_at, now()), receipt_path = p_receipt_path
-   where id = p_id and source = 'online' and status = 'open';
+   where id = p_id and source = 'online' and status = 'open' and customer_id = auth.uid();
   return found;
 end $$;
 
 revoke all on function public.mark_online_paid(uuid, text) from public;
-grant execute on function public.mark_online_paid(uuid, text) to anon, authenticated;
+grant execute on function public.mark_online_paid(uuid, text) to authenticated;
 revoke all on function public.place_online_order(jsonb, text, text, text, text, text) from public;
 revoke all on function public.get_online_order(uuid) from public;
-grant execute on function public.place_online_order(jsonb, text, text, text, text, text) to anon, authenticated;
-grant execute on function public.get_online_order(uuid) to anon, authenticated;
+grant execute on function public.place_online_order(jsonb, text, text, text, text, text) to authenticated;
+revoke all on function public.place_online_order(jsonb, text, text, text, text, text) from anon;
+revoke all on function public.get_online_order(uuid) from anon;
+revoke all on function public.mark_online_paid(uuid, text) from anon;
+grant execute on function public.get_online_order(uuid) to authenticated;
+grant execute on function public.mark_online_paid(uuid, text) to authenticated;
 
 ------------------------------------------------------------
 -- 6) Realtime: POS sees new orders and the open/close switch instantly

@@ -594,7 +594,14 @@ main {
     }
     sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
     const { data } = await sb.auth.getSession();
-    if (data && data.session) { $("logout").hidden = false; startData(); }
+    if (data && data.session) {
+      $("logout").hidden = false;
+      const { data: staff, error: roleError } = await sb.rpc("is_staff");
+      if (roleError || staff !== true) {
+        setSync("bad", roleError ? "ต้องอัปเดตฐานข้อมูล" : "ไม่มีสิทธิ์พนักงาน");
+        showBanner(roleError ? "<b>กรุณาอัปเดตฐานข้อมูลก่อน</b> รัน schema.sql เวอร์ชันล่าสุดใน Supabase" : "<b>บัญชีนี้ไม่มีสิทธิ์พนักงาน</b> ใช้หน้าออเดอร์สำหรับลูกค้าแทน");
+      } else startData();
+    }
     else { setSync("bad", "ยังไม่ได้เข้าสู่ระบบ"); loginForm(); }
     $("logout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
   }
