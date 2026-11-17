@@ -47,12 +47,17 @@ revoke all on public.orders from anon;
 ------------------------------------------------------------
 create table if not exists public.settings (
   id           integer primary key default 1 check (id = 1),
-  online_open  boolean not null default false,
-  open_from    text    not null default '16:30',
-  open_until   text    not null default '20:30',
+  online_open  boolean not null default true,
+  open_from    text    not null default '00:00',
+  open_until   text    not null default '23:45',
   updated_at   timestamptz not null default now()
 );
-insert into public.settings (id) values (1) on conflict (id) do nothing;
+insert into public.settings (id, online_open, open_from, open_until)
+values (1, true, '00:00', '23:45')
+on conflict (id) do update set online_open = excluded.online_open,
+                              open_from = excluded.open_from,
+                              open_until = excluded.open_until,
+                              updated_at = now();
 alter table public.settings enable row level security;
 drop policy if exists "anyone reads settings" on public.settings;
 drop policy if exists "staff updates settings" on public.settings;
