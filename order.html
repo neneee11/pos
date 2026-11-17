@@ -62,6 +62,7 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
 .paybox { display: flex; flex-direction: column; gap: 12px; }
 .paybox h2 { font-size: 1.2rem; }
 .paybox .lead { margin: 0; color: var(--muted); font-size: .9rem; }
+.receipt-label { color: var(--muted); font-size: .9rem; }
 .claimed { display: flex; gap: 10px; align-items: center; background: var(--moss-bg); color: var(--moss); border-radius: 14px; padding: 12px 14px; font-size: .95rem; }
 .sheet .warn { background: rgba(240,180,76,.12); border: 1px solid rgba(240,180,76,.4); border-radius: 12px; padding: 10px 12px; font-size: .88rem; }
 .status { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; font-size: .85rem; background: var(--moss-bg); color: var(--moss); }
@@ -212,14 +213,17 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     </div>
     <div class="panel paybox" id="dPay">
       <h2>ขั้นตอนสุดท้าย: โอนชำระทันที</h2>
-      <p class="lead">สแกน QR ด้วยแอปธนาคาร ใส่ยอดให้ตรง แล้วกด "โอนแล้ว" ร้านจะเริ่มทำเมื่อได้รับยอด</p>
+      <p class="lead">สแกน QR ด้วยแอปธนาคาร ใส่ยอดให้ตรง แล้วแนบสลิปก่อนส่งแจ้งชำระ ร้านจะตรวจยอดก่อนเริ่มทำ</p>
       <div class="qr">
         <div class="band"><img src="promptpay-logo.png" alt="PromptPay"><span>THAI QR PAYMENT</span></div>
         <div class="code"><img src="promptpay-code.png" alt="QR พร้อมเพย์ร้านยำดิวะ"></div>
         <div class="amt num" id="dAmt">฿0</div>
         <div class="who"><b>MS PATCHARIDA PLONGPAN</b><small>พร้อมเพย์ 095-xxx-8897 · Bangkok Bank</small></div>
       </div>
-      <button class="btn" id="claimPaid" type="button">โอนแล้ว แจ้งร้าน</button>
+      <label class="receipt-label" for="receiptFile">แนบสลิปโอนเงินก่อนแจ้งชำระ (JPG, PNG หรือ WebP ไม่เกิน 5 MB)</label>
+      <input class="field" id="receiptFile" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+      <img id="receiptPreview" alt="ตัวอย่างสลิปที่เลือก" hidden style="max-width:100%;max-height:260px;object-fit:contain;border-radius:12px">
+      <button class="btn" id="claimPaid" type="button" disabled>ส่งสลิปและแจ้งร้าน</button>
     </div>
     <div class="claimed" id="dClaimed" hidden>✓ แจ้งโอนแล้ว ร้านกำลังตรวจยอด เก็บสลิปไว้แสดงตอนรับด้วยนะ</div>
     <div class="panel">
@@ -419,10 +423,25 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     if (paid || voided) { clearInterval(pollT); try { localStorage.removeItem(LAST); } catch (e) {} }
   }
   async function claimPaid() {
-    const b = $("claimPaid"); b.disabled = true; b.textContent = "กำลังแจ้งร้าน…";
-    const { error } = await sb.rpc("mark_online_paid", { p_id: doneId });
-    b.disabled = false; b.textContent = "โอนแล้ว แจ้งร้าน";
-    if (error) { alertText("แจ้งไม่สำเร็จ ลองอีกครั้ง"); return; }
+    const b = $("claimPaid"), file = $("receiptFile").files[0];
+    if (!file) { alertText("กรุณาแนบสลิปก่อนแจ้งชำระ"); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      alertText("ไฟล์ต้องเป็น JPG, PNG หรือ WebP และมีขนาดไม่เกิน 5 MB"); return;
+    }
+    b.disabled = true; b.textContent = "กำลังส่งสลิป…";
+    const ext = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[file.type];
+    const path = `${doneId}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await sb.storage.from("payment-receipts").upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) {
+      b.disabled = false; b.textContent = "ส่งสลิปและแจ้งร้าน";
+      alertText("อัปโหลดสลิปไม่สำเร็จ ลองอีกครั้ง"); return;
+    }
+    b.textContent = "กำลังแจ้งร้าน…";
+    const { data, error } = await sb.rpc("mark_online_paid", { p_id: doneId, p_receipt_path: path });
+    if (error || data !== true) {
+      b.disabled = false; b.textContent = "ส่งสลิปและแจ้งร้าน";
+      alertText("แจ้งไม่สำเร็จ ลองอีกครั้ง"); return;
+    }
     refreshStatus();
   }
   function alertText(m) { const p = $("dPay").querySelector(".lead"); p.textContent = m; p.style.color = "var(--chili)"; }
@@ -465,6 +484,16 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
   }
 
   /* ---------- events ---------- */
+  $("receiptFile").addEventListener("change", e => {
+    const file = e.target.files[0], preview = $("receiptPreview"), button = $("claimPaid");
+    button.disabled = !file;
+    if (!file) { preview.hidden = true; preview.removeAttribute("src"); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      e.target.value = ""; button.disabled = true; preview.hidden = true;
+      alertText("ไฟล์ต้องเป็น JPG, PNG หรือ WebP และมีขนาดไม่เกิน 5 MB"); return;
+    }
+    preview.src = URL.createObjectURL(file); preview.hidden = false;
+  });
   document.addEventListener("click", e => {
     const t = e.target.closest("button"); if (!t) { if (e.target === $("sheet")) $("sheet").hidden = true; return; }
     const d = t.dataset;

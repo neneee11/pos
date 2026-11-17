@@ -30,6 +30,7 @@ alter table public.orders add column if not exists customer_name  text;
 alter table public.orders add column if not exists customer_phone text;
 alter table public.orders add column if not exists ready_at       timestamptz;
 alter table public.orders add column if not exists customer_paid_at timestamptz;   -- customer tapped "โอนแล้ว"
+alter table public.orders add column if not exists receipt_path text;
 create index if not exists orders_date_idx on public.orders (date);
 
 alter table public.orders enable row level security;
@@ -63,6 +64,23 @@ drop policy if exists "anyone reads settings" on public.settings;
 drop policy if exists "staff updates settings" on public.settings;
 create policy "anyone reads settings"  on public.settings for select to anon, authenticated using (true);
 create policy "staff updates settings" on public.settings for update to authenticated using (true) with check (true);
+
+------------------------------------------------------------
+-- 2b) Private storage for customer payment slips
+------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('payment-receipts', 'payment-receipts', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = false, file_size_limit = 5242880,
+                              allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+drop policy if exists "customer upload payment slips" on storage.objects;
+drop policy if exists "staff read payment slips" on storage.objects;
+create policy "customer upload payment slips" on storage.objects
+  for insert to anon with check (
+    bucket_id = 'payment-receipts'
+    and name ~ '^[0-9a-fA-F-]{36}/[0-9a-fA-F-]{36}\.(jpg|png|webp)$'
+  );
+create policy "staff read payment slips" on storage.objects
+  for select to authenticated using (bucket_id = 'payment-receipts');
 
 ------------------------------------------------------------
 -- 3) Menu: prices for online orders are always taken from here, never from the customer's browser
@@ -167,18 +185,28 @@ $$;
 ------------------------------------------------------------
 -- 5b) Customer taps "โอนแล้ว" after paying by QR (staff still check the bank app before closing the bill)
 ------------------------------------------------------------
-create or replace function public.mark_online_paid(p_id uuid)
+drop function if exists public.mark_online_paid(uuid);
+create or replace function public.mark_online_paid(p_id uuid, p_receipt_path text)
 returns boolean
-language sql security definer set search_path = public as $$
-  with u as (
-    update public.orders set customer_paid_at = coalesce(customer_paid_at, now())
-    where id = p_id and source = 'online' and status = 'open'
-    returning 1
-  ) select exists (select 1 from u);
-$$;
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_receipt_path is null or split_part(p_receipt_path, '/', 1) <> p_id::text then
+    raise exception 'RECEIPT_REQUIRED';
+  end if;
+  if not exists (
+    select 1 from storage.objects
+    where bucket_id = 'payment-receipts' and name = p_receipt_path
+  ) then
+    raise exception 'RECEIPT_NOT_FOUND';
+  end if;
+  update public.orders
+     set customer_paid_at = coalesce(customer_paid_at, now()), receipt_path = p_receipt_path
+   where id = p_id and source = 'online' and status = 'open';
+  return found;
+end $$;
 
-revoke all on function public.mark_online_paid(uuid) from public;
-grant execute on function public.mark_online_paid(uuid) to anon, authenticated;
+revoke all on function public.mark_online_paid(uuid, text) from public;
+grant execute on function public.mark_online_paid(uuid, text) to anon, authenticated;
 revoke all on function public.place_online_order(jsonb, text, text, text, text, text) from public;
 revoke all on function public.get_online_order(uuid) from public;
 grant execute on function public.place_online_order(jsonb, text, text, text, text, text) to anon, authenticated;

@@ -488,7 +488,7 @@ main {
     subtotal: Number(r.subtotal), discount: Number(r.discount), total: Number(r.total),
     couponId: r.coupon_id || "", couponLabel: r.coupon_label || "",
     paidAt: toMs(r.paid_at), payMethod: r.pay_method || "", voidAt: toMs(r.void_at),
-    source: r.source || "pos", pickupTime: r.pickup_time || "", customerName: r.customer_name || "", customerPhone: r.customer_phone || "", readyAt: toMs(r.ready_at), customerPaidAt: toMs(r.customer_paid_at)
+    source: r.source || "pos", pickupTime: r.pickup_time || "", customerName: r.customer_name || "", customerPhone: r.customer_phone || "", readyAt: toMs(r.ready_at), customerPaidAt: toMs(r.customer_paid_at), receiptPath: r.receipt_path || ""
   });
   const MAP = { queue: "queue", date: "date", createdAt: "created_at", status: "status", items: "items", spice: "spice", note: "note",
     subtotal: "subtotal", discount: "discount", total: "total", couponId: "coupon_id", couponLabel: "coupon_label",
@@ -759,6 +759,7 @@ main {
         ${o.status === "open" ? `<div class="acts">
           <button class="btn danger sm" data-void="${o.id}">ยกเลิก</button>
           ${online && !o.readyAt ? `<button class="btn ghost sm" data-ready="${o.id}">ทำเสร็จแล้ว</button>` : ""}
+          ${online && o.receiptPath ? `<button class="btn ghost sm" data-receipt="${esc(o.receiptPath)}">ดูสลิป</button>` : ""}
           <button class="btn sm" data-pay="${o.id}">${online && o.customerPaidAt ? "ตรวจยอดแล้ว ปิดบิล" : "QR / ปิดบิล"}</button></div>` : ""}
       </div>`;
     }).join("") : `<div class="empty panel">${empty[orderFilter] || ""}</div>`;
@@ -949,6 +950,14 @@ main {
     if (d.f) { orderFilter = d.f; renderOrders(); return; }
     if (d.goonline) { t.closest(".alert") && dismissAlert(t.closest(".alert")); orderFilter = "online"; setView("orders"); return; }
     if (d.ready) { const o = orders.find(x => x.id === d.ready); if (o) write(() => store.update("orders", o.id, { readyAt: Date.now() }), qLabel(o) + " พร้อมรับแล้ว ลูกค้าจะเห็นสถานะนี้"); return; }
+    if (d.receipt) {
+      const win = window.open("about:blank", "_blank");
+      sb.storage.from("payment-receipts").createSignedUrl(d.receipt, 60).then(({ data, error }) => {
+        if (error || !data?.signedUrl) { if (win) win.close(); toast("เปิดสลิปไม่สำเร็จ", true); return; }
+        if (win) win.location = data.signedUrl;
+      });
+      return;
+    }
     if (t.id === "onlineToggle") return toggleShop();
     if (d.pay) return openPay(d.pay);
     if (d.void) { const o = orders.find(x => x.id === d.void); if (o) confirmBox("ยกเลิก " + qLabel(o) + "?", "ออเดอร์นี้จะไม่ถูกนับในยอดขาย", "ยกเลิกออเดอร์", () => write(() => store.update("orders", o.id, { status: "void", voidAt: Date.now() }), "ยกเลิก " + qLabel(o) + " แล้ว")); return; }
