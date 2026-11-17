@@ -135,7 +135,7 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
 .qr .band img { height: 32px; width: auto; }
 .qr .band span { font-size: .75rem; font-weight: 600; letter-spacing: .08em; color: #13406b; }
 .qr .code { width: 100%; max-width: 240px; aspect-ratio: 1; padding: 8px; border: 1.5px solid #dfe6ee; border-radius: 14px; }
-.qr .code img { width: 100%; height: 100%; display: block; }
+.qr .code img, .qr .code canvas { width: 100%; height: 100%; display: block; }
 .qr .who { text-align: center; line-height: 1.35; }
 .qr .who b { display: block; font-family: var(--font-head); font-weight: 500; }
 .qr .who small { color: #5b6b7d; }
@@ -213,10 +213,10 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     </div>
     <div class="panel paybox" id="dPay">
       <h2>ขั้นตอนสุดท้าย: โอนชำระทันที</h2>
-      <p class="lead">สแกน QR ด้วยแอปธนาคาร ใส่ยอดให้ตรง แล้วแนบสลิปก่อนส่งแจ้งชำระ ร้านจะตรวจยอดก่อนเริ่มทำ</p>
+      <p class="lead">สแกน QR ด้วยแอปธนาคาร ระบบใส่ยอดออเดอร์ให้แล้ว ตรวจยอดและชื่อผู้รับก่อนโอน แล้วแนบสลิปเพื่อแจ้งร้าน</p>
       <div class="qr">
         <div class="band"><img src="promptpay-logo.png" alt="PromptPay"><span>THAI QR PAYMENT</span></div>
-        <div class="code"><img src="promptpay-code.png" alt="QR พร้อมเพย์ร้านยำดิวะ"></div>
+        <div class="code" id="dPromptPayQr" aria-label="QR พร้อมเพย์พร้อมยอดชำระ"></div>
         <div class="amt num" id="dAmt">฿0</div>
         <div class="who"><b>MS PATCHARIDA PLONGPAN</b><small>พร้อมเพย์ 095-xxx-8897 · Bangkok Bank</small></div>
       </div>
@@ -255,7 +255,9 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="config.js"></script>
+<script src="promptpay.js"></script>
 <script>
 (function () {
   "use strict";
@@ -411,6 +413,8 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     $("dQueue").textContent = "#" + o.out_queue;
     $("dPick").textContent = "มารับวันนี้ " + o.out_pickup + " น. · " + (o.out_name || "");
     $("dAmt").textContent = baht(o.out_total);
+    try { window.renderPromptPayQr($("dPromptPayQr"), o.out_total); }
+    catch (err) { alertText("สร้าง QR รับชำระไม่สำเร็จ กรุณาติดต่อร้าน"); }
     $("dLines").innerHTML = (o.out_items || []).map(i => `<li><span>${esc(i.name)} × ${i.qty}</span><span class="num">${baht(i.price * i.qty)}</span></li>`).join("") +
       `<li class="tot"><span>ยอดชำระ</span><span class="num">${baht(o.out_total)}</span></li>`;
     const paid = o.out_status === "paid", ready = o.out_ready || paid, voided = o.out_status === "void", claimed = !!o.out_claimed || paid;

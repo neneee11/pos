@@ -235,7 +235,7 @@ main {
 .pay-qr .band img { height: 34px; width: auto; }
 .pay-qr .band span { font-size: .78rem; font-weight: 600; letter-spacing: .08em; color: #13406b; }
 .pay-qr .code { width: 100%; max-width: 270px; aspect-ratio: 1; padding: 10px; border: 1.5px solid #dfe6ee; border-radius: 16px; }
-.pay-qr .code img { width: 100%; height: 100%; display: block; image-rendering: crisp-edges; }
+  .pay-qr .code img, .pay-qr .code canvas { width: 100%; height: 100%; display: block; }
 .pay-qr .who { text-align: center; line-height: 1.35; }
 .pay-qr .who b { display: block; font-family: var(--font-head); font-weight: 500; font-size: 1.05rem; letter-spacing: .02em; }
 .pay-qr .who small { color: #5b6b7d; font-size: .85rem; }
@@ -444,7 +444,9 @@ main {
 <div class="alerts" id="alerts" aria-live="assertive"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="config.js"></script>
+<script src="promptpay.js"></script>
 <script>
 (function () {
   "use strict";
@@ -833,17 +835,19 @@ main {
       <div class="pay-grid">
         <div class="pay-qr">
           <div class="band"><img src="promptpay-logo.png" alt="PromptPay"><span>THAI QR PAYMENT</span></div>
-          <div class="code"><img src="promptpay-code.png" alt="QR พร้อมเพย์สำหรับชำระเงิน"></div>
+          <div class="code" id="payPromptPayQr" aria-label="QR พร้อมเพย์พร้อมยอดชำระ"></div>
           <div class="who"><b>MS PATCHARIDA PLONGPAN</b><small>พร้อมเพย์ 095-xxx-8897 · Bangkok Bank</small></div>
         </div>
         <div class="pay-info">
           <div class="q"><h2>สแกนจ่าย</h2><b class="num">${qLabel(o)}</b></div>
           <div class="amount-box"><span>ยอดที่ต้องโอน</span><b class="num">${baht(o.total)}</b>${n(o.discount) > 0 ? `<small>ใช้คูปอง ${esc(o.couponLabel)} ลด ${baht(o.discount)} แล้ว</small>` : ""}</div>
           <ul class="pay-items">${(o.items || []).map(i => `<li><span>${esc(i.name)} × ${n(i.qty)}</span><span class="num">${baht(n(i.price) * n(i.qty))}</span></li>`).join("")}</ul>
-          <ol class="steps"><li>ลูกค้าสแกน QR ด้วยแอปธนาคาร</li><li>ใส่ยอด ${baht(o.total)} แล้วกดโอน</li><li>ตรวจสลิปว่ายอดและชื่อผู้รับตรง</li></ol>
+          <ol class="steps"><li>สแกน QR ด้วยแอปธนาคาร</li><li>ระบบใส่ยอด ${baht(o.total)} ให้แล้ว ตรวจยอดก่อนโอน</li><li>ตรวจสลิปว่ายอดและชื่อผู้รับตรง</li></ol>
           <div class="modal-acts"><button class="btn ghost" data-close>จ่ายทีหลัง</button><button class="btn" id="confirmPay">ได้รับเงินแล้ว</button></div>
         </div>
       </div>`, "pay");
+    try { window.renderPromptPayQr($("payPromptPayQr"), o.total); }
+    catch (err) { toast("สร้าง QR รับชำระไม่สำเร็จ", true); }
   }
   async function confirmPay() {
     const o = orders.find(x => x.id === payId); closeModal(); if (!o) return;
