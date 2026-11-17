@@ -787,6 +787,7 @@ main {
           ${online && !o.readyAt ? `<button class="btn ghost sm" data-ready="${o.id}">ทำเสร็จแล้ว</button>` : ""}
           ${online && o.receiptPath ? `<button class="btn ghost sm" data-receipt="${esc(o.receiptPath)}">ดูสลิป</button>` : ""}
           <button class="btn sm" data-pay="${o.id}">${online && o.customerPaidAt ? "ตรวจยอดแล้ว ปิดบิล" : "QR / ปิดบิล"}</button></div>` : ""}
+        ${o.status === "paid" ? `<div class="acts"><button class="btn danger sm" data-revoid="${o.id}">Revoid บิล</button></div>` : ""}
       </div>`;
     }).join("") : `<div class="empty panel">${empty[orderFilter] || ""}</div>`;
     if (sb) list.filter(o => o.source === "online" && o.receiptPath).forEach(o => loadReceiptPreview(o.receiptPath));
@@ -990,6 +991,16 @@ main {
     if (t.id === "onlineToggle") return toggleShop();
     if (d.pay) return openPay(d.pay);
     if (d.void) { const o = orders.find(x => x.id === d.void); if (o) confirmBox("ยกเลิก " + qLabel(o) + "?", "ออเดอร์นี้จะไม่ถูกนับในยอดขาย", "ยกเลิกออเดอร์", () => write(() => store.update("orders", o.id, { status: "void", voidAt: Date.now() }), "ยกเลิก " + qLabel(o) + " แล้ว")); return; }
+    if (d.revoid) {
+      const o = orders.find(x => x.id === d.revoid);
+      if (o && o.status === "paid") confirmBox(
+        "Revoid บิล " + qLabel(o) + "?",
+        "บิลนี้จะถูกยกเลิกและนำออกจากยอดขาย ต้องคีย์บิลใหม่เอง การ Revoid ไม่ได้คืนเงิน",
+        "Revoid บิล",
+        () => write(() => store.update("orders", o.id, { status: "void", voidAt: Date.now() }), "Revoid " + qLabel(o) + " แล้ว")
+      );
+      return;
+    }
     if (t.id === "confirmPay") return confirmPay();
     if ("close" in d) return closeModal();
     if (d.day) { selDay = d.day; renderReport(); return; }
