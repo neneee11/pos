@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121512">
 <title>สั่งยำดิวะล่วงหน้า</title>
-<meta name="description" content="สั่งยำลูกชิ้นและชามะลิล่วงหน้า แล้วมารับที่หน้าร้าน ดูประวัติออเดอร์ได้ด้วยบัญชีลูกค้า">
+<meta name="description" content="สั่งยำลูกชิ้นและชามะลิล่วงหน้า แล้วมารับที่หน้าร้าน เปิด 16:30–20:30">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23f0b44c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,17 +72,6 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
 .panel { background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
 .panel h2 { font-size: 1.15rem; margin-bottom: 10px; }
 .hint { color: var(--muted); font-size: .85rem; margin: -4px 0 10px; }
-.account-panel { display: flex; flex-direction: column; gap: 12px; }
-.account-panel .account-head p { margin: 2px 0 0; }
-.account-panel .account-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.account-panel .account-email { color: var(--muted); overflow-wrap: anywhere; }
-.account-panel .btn { padding: 9px 14px; }
-.history-list { display: flex; flex-direction: column; gap: 10px; }
-.history-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: rgba(0,0,0,.16); }
-.history-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.history-card .history-state { color: var(--honey); font-size: .86rem; }
-.history-card ul { margin: 8px 0; padding-left: 18px; color: var(--muted); font-size: .88rem; }
-.history-card .history-total { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 7px; font-family: var(--font-head); }
 
 .item { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .item:last-child { border-bottom: 0; }
@@ -169,38 +158,9 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
   <header class="hero">
     <div class="brand"><small>yum</small><b>DIWAAAA</b></div>
     <p class="promo">สั่งออนไลน์ <b>สะดวก รวดเร็ว</b> ไม่ต้องยืนรอคิว มาถึงหยิบได้เลย</p>
-    <p>เปิดรับ <span class="num" id="hours">00:00–23:45</span> · ชำระผ่าน QR ทันทีหลังสั่ง · ออนไลน์ไม่ร่วมรายการคูปอง</p>
+    <p>เปิดรับ <span class="num" id="hours">16:30–20:30</span> · ชำระผ่าน QR ทันทีหลังสั่ง · ออนไลน์ไม่ร่วมรายการคูปอง</p>
     <span class="status closed" id="shopStatus">กำลังเช็กสถานะร้าน…</span>
   </header>
-
-  <section class="panel account-panel" id="customerAccount">
-    <div class="account-head">
-      <h2 id="accountTitle">ล็อกอินเพื่อสั่งอาหาร</h2>
-      <p class="hint" id="accountHint">สมัครด้วยอีเมลเพื่อเก็บประวัติออเดอร์และดูได้ทุกเครื่อง · ออเดอร์ก่อนสมัครจะไม่เชื่อมให้อัตโนมัติ</p>
-    </div>
-    <form id="customerAuthForm">
-      <div class="fields">
-        <label for="customerEmail">อีเมล<input class="field" id="customerEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
-        <label for="customerPassword">รหัสผ่าน<input class="field" id="customerPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="อย่างน้อย 6 ตัวอักษร"></label>
-      </div>
-      <div class="account-actions" style="margin-top:10px">
-        <button class="btn" id="authSubmit" type="submit">เข้าสู่ระบบ</button>
-        <button class="btn ghost" id="authSwitch" type="button">สมัครสมาชิก</button>
-      </div>
-    </form>
-    <p class="err" id="authMessage" role="status" aria-live="polite"></p>
-    <div id="customerSignedIn" hidden>
-      <div class="account-actions">
-        <span class="account-email" id="accountEmail"></span>
-        <button class="btn ghost" id="customerLogout" type="button">ออกจากระบบ</button>
-      </div>
-      <section id="historyPanel" hidden style="margin-top:14px">
-        <h3 style="font-size:1rem;margin-bottom:8px">ประวัติการสั่งซื้อ</h3>
-        <p class="hint" id="historyMessage">กำลังโหลดประวัติ…</p>
-        <div class="history-list" id="historyList"></div>
-      </section>
-    </div>
-  </section>
 
   <!-- closed / not configured -->
   <section class="panel closed-box" id="closedBox" hidden>
@@ -315,7 +275,6 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     TIME_PASSED: "เวลานี้ใกล้เกินไปแล้ว เลือกเวลาที่ช้ากว่านี้",
     BAD_CONTACT: "ตรวจชื่อและเบอร์โทรอีกครั้ง",
     BAD_ITEM: "มีเมนูที่หมดหรือไม่ถูกต้อง ลองรีเฟรชหน้า",
-    LOGIN_REQUIRED: "กรุณาเข้าสู่ระบบก่อนสั่งอาหาร",
     EMPTY: "ยังไม่ได้เลือกเมนู",
     TOO_MANY: "เบอร์นี้มีออเดอร์ที่ยังไม่ได้รับ 3 รายการแล้ว",
     QUEUE_FULL: "วันนี้คิวออนไลน์เต็มแล้ว"
@@ -334,10 +293,6 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
   }
 
   let sb = null;
-  let session = null;
-  let authMode = "login";
-  let customerAuthStatus = "checking";
-  let lastOrderRestoredFor = null;
   let menu = FALLBACK_MENU;
   let settings = { online_open: true, open_from: "00:00", open_until: "23:45" };
   let cart = {};
@@ -358,19 +313,17 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
   /* ---------- render ---------- */
   function renderShop() {
     $("hours").textContent = settings.open_from + "–" + settings.open_until;
-    const loggedIn = !!session?.user;
-    const canOrder = customerAuthStatus === "legacy" || (customerAuthStatus === "ready" && loggedIn);
-    const open = canOrder && !!settings.online_open && anySlot();
+    const open = !!settings.online_open && anySlot();
     const st = $("shopStatus");
-    st.textContent = customerAuthStatus === "checking" ? "กำลังตรวจสอบระบบบัญชี" : customerAuthStatus === "error" ? "ระบบบัญชียังไม่พร้อม" : customerAuthStatus === "ready" && !loggedIn ? "เข้าสู่ระบบเพื่อสั่งอาหาร" : settings.online_open ? (open ? "เปิดรับออเดอร์ออนไลน์" : "วันนี้หมดรอบรับแล้ว") : "ปิดรับออเดอร์ออนไลน์";
+    st.textContent = settings.online_open ? (open ? "เปิดรับออเดอร์ออนไลน์" : "วันนี้หมดรอบรับแล้ว") : "ปิดรับออเดอร์ออนไลน์";
     st.classList.toggle("closed", !open);
     if (doneId) { $("closedBox").hidden = true; $("orderForm").hidden = true; $("bar").hidden = true; return; }
-    $("closedBox").hidden = !canOrder || open;
+    $("closedBox").hidden = open;
     if (!open) {
       $("closedTitle").textContent = settings.online_open ? "วันนี้หมดรอบรับแล้ว" : "ตอนนี้ร้านปิดรับออเดอร์ออนไลน์";
       $("closedText").textContent = settings.online_open ? "รอบรับสุดท้ายคือ " + settings.open_until + " น. แวะมาใหม่พรุ่งนี้นะ" : "หน้านี้จะเปิดให้สั่งเองอัตโนมัติเมื่อร้านเปิดรับ";
     }
-    $("orderForm").hidden = !canOrder || !open; $("bar").hidden = !canOrder || !open;
+    $("orderForm").hidden = !open; $("bar").hidden = !open;
     if (open) { renderMenu(); renderSlots(); renderBar(); }
   }
   function renderMenu() {
@@ -438,15 +391,10 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
       return;
     }
     const row = Array.isArray(data) ? data[0] : data;
-    try {
-      const last = { id: row.out_id, date: bkk().date };
-      if (session?.user?.id) last.userId = session.user.id;
-      localStorage.setItem(LAST, JSON.stringify(last));
-    } catch (e) {}
+    try { localStorage.setItem(LAST, JSON.stringify({ id: row.out_id, date: bkk().date })); } catch (e) {}
     cart = {}; pickup = ""; $("cNote").value = "";
     $("sheet").hidden = true;
     showDone(row.out_id);
-    loadOrderHistory();
   }
 
   /* ---------- confirmation + live status ---------- */
@@ -507,24 +455,6 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     $("doneView").hidden = true; renderShop();
   }
 
-  function restoreLastOrder() {
-    if (customerAuthStatus === "legacy" && !session?.user) {
-      try {
-        const last = JSON.parse(localStorage.getItem(LAST) || "null");
-        if (last && last.id && !last.userId && last.date === bkk().date) showDone(last.id);
-      } catch (e) {}
-      return;
-    }
-    if (!session?.user || lastOrderRestoredFor === session.user.id) return;
-    lastOrderRestoredFor = session.user.id;
-    try {
-      const last = JSON.parse(localStorage.getItem(LAST) || "null");
-      if (last && last.id && last.date === bkk().date &&
-          (last.userId === session.user.id || (customerAuthStatus === "legacy" && !last.userId))) showDone(last.id);
-      else if (last) localStorage.removeItem(LAST);
-    } catch (e) {}
-  }
-
   /* ---------- data ---------- */
   async function loadSettings() {
     const { data, error } = await sb.from("settings").select("online_open, open_from, open_until").eq("id", 1).maybeSingle();
@@ -536,82 +466,6 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
     if (!error && data && data.length) menu = data.filter(m => m.available).map(m => ({ ...m, price: Number(m.price) }));
   }
 
-  function renderCustomerAccount() {
-    const loggedIn = !!session?.user;
-    const customerAuthReady = customerAuthStatus === "ready";
-    $("customerAuthForm").hidden = loggedIn || !customerAuthReady;
-    $("customerSignedIn").hidden = !loggedIn;
-    $("historyPanel").hidden = !loggedIn;
-    $("accountTitle").textContent = loggedIn ? "บัญชีลูกค้า" : !customerAuthReady ? "ระบบบัญชีลูกค้ากำลังตั้งค่า" : (authMode === "login" ? "ล็อกอินเพื่อสั่งอาหาร" : "สมัครสมาชิกเพื่อสั่งอาหาร");
-    $("accountHint").textContent = loggedIn ? "ดูออเดอร์และสถานะย้อนหลังของบัญชีนี้ได้ที่นี่" : !customerAuthReady ? "กำลังเตรียมระบบบัญชีลูกค้า หน้าสั่งซื้อแบบเดิมยังใช้งานได้ชั่วคราว" : "สมัครด้วยอีเมลเพื่อเก็บประวัติออเดอร์และดูได้ทุกเครื่อง · ออเดอร์ก่อนสมัครจะไม่เชื่อมให้อัตโนมัติ";
-    $("accountEmail").textContent = loggedIn ? session.user.email || "เข้าสู่ระบบแล้ว" : "";
-    $("authSubmit").textContent = authMode === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
-    $("authSwitch").textContent = authMode === "login" ? "สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ";
-    if (!loggedIn) $("historyList").innerHTML = "";
-  }
-
-  async function loadOrderHistory() {
-    if (!session?.user) return;
-    const uid = session.user.id;
-    $("historyMessage").textContent = "กำลังโหลดประวัติ…";
-    const { data, error } = await sb.from("orders")
-      .select("id, queue, date, status, items, total, pickup_time, created_at, paid_at, customer_paid_at, ready_at")
-      .eq("customer_id", uid).order("created_at", { ascending: false }).limit(100);
-    if (session?.user?.id !== uid) return;
-    if (error) {
-      $("historyMessage").textContent = "โหลดประวัติไม่สำเร็จ กรุณาลองใหม่";
-      $("historyList").innerHTML = "";
-      return;
-    }
-    if (!data.length) {
-      $("historyMessage").textContent = "ยังไม่มีประวัติออเดอร์ ออเดอร์ใหม่หลังเข้าสู่ระบบจะปรากฏที่นี่";
-      $("historyList").innerHTML = "";
-      return;
-    }
-    $("historyMessage").textContent = "แสดงออเดอร์ล่าสุด " + data.length + " รายการ";
-    const state = o => o.status === "void" ? "ยกเลิก" : o.status === "paid" ? "ชำระแล้ว" : o.ready_at ? "พร้อมรับ" : o.customer_paid_at ? "แจ้งโอนแล้ว · รอตรวจ" : "รอชำระ";
-    $("historyList").innerHTML = data.map(o => `
-      <article class="history-card">
-        <header><b class="num">คิว #${n(o.queue)}</b><span class="history-state">${state(o)}</span></header>
-        <div class="hint">วันที่ ${esc(o.date)} · รับ ${esc(o.pickup_time || "-")} น.</div>
-        <ul>${(o.items || []).map(i => `<li>${esc(i.name)} × ${n(i.qty)}</li>`).join("")}</ul>
-        <div class="history-total"><span>ยอดชำระ</span><b class="num">${baht(o.total)}</b></div>
-      </article>`).join("");
-  }
-
-  async function submitCustomerAuth(e) {
-    e.preventDefault();
-    if (customerAuthStatus !== "ready") return;
-    const email = $("customerEmail").value.trim(), password = $("customerPassword").value;
-    const submit = $("authSubmit"), switcher = $("authSwitch");
-    submit.disabled = true; switcher.disabled = true;
-    $("authMessage").textContent = authMode === "login" ? "กำลังเข้าสู่ระบบ…" : "กำลังสมัครสมาชิก…";
-    let result;
-    try {
-      result = authMode === "login"
-        ? await sb.auth.signInWithPassword({ email, password })
-        : await sb.auth.signUp({ email, password, options: { emailRedirectTo: window.location.href.split("#")[0] } });
-    } catch (error) {
-      submit.disabled = false; switcher.disabled = false;
-      $("authMessage").textContent = "เชื่อมต่อระบบสมาชิกไม่สำเร็จ กรุณาลองใหม่";
-      return;
-    }
-    submit.disabled = false; switcher.disabled = false;
-    if (result.error) {
-      $("authMessage").textContent = authMode === "login" ? "เข้าสู่ระบบไม่สำเร็จ ตรวจอีเมลและรหัสผ่านอีกครั้ง" : "สมัครสมาชิกไม่สำเร็จ อีเมลนี้อาจถูกใช้แล้วหรือรหัสผ่านไม่ผ่านเงื่อนไข";
-      return;
-    }
-    if (authMode === "signup" && !result.data.session) {
-      $("authMessage").textContent = "สมัครแล้ว กรุณากดยืนยันจากอีเมล แล้วกลับมาเข้าสู่ระบบ";
-      authMode = "login"; renderCustomerAccount();
-      return;
-    }
-    $("authMessage").textContent = "เข้าสู่ระบบแล้ว";
-    session = result.data.session;
-    renderCustomerAccount(); renderShop();
-    await loadOrderHistory();
-  }
-
   async function init() {
     const cfg = window.YUMDIWA_CONFIG || {};
     if (!window.supabase || !cfg.SUPABASE_URL || String(cfg.SUPABASE_URL).includes("YOUR-") || !cfg.SUPABASE_ANON_KEY || String(cfg.SUPABASE_ANON_KEY).includes("YOUR-")) {
@@ -619,52 +473,21 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
       $("closedBox").hidden = false; $("closedTitle").textContent = "ระบบสั่งออนไลน์ยังไม่พร้อม"; $("closedText").textContent = "ร้านยังไม่ได้เชื่อมฐานข้อมูล";
       return;
     }
-    sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
-    sb.auth.onAuthStateChange((_event, nextSession) => {
-      const previousId = session?.user?.id;
-      session = nextSession;
-      if (session && session.user.id !== previousId) $("authMessage").textContent = "";
-      else if (!session && previousId) $("authMessage").textContent = "ออกจากระบบแล้ว";
-      renderCustomerAccount(); renderShop();
-      if (session?.user?.id && session.user.id !== previousId) {
-        if (doneId) leaveDone();
-        setTimeout(() => { restoreLastOrder(); loadOrderHistory(); }, 0);
-      } else if (!session) {
-        lastOrderRestoredFor = null;
-        if (doneId) leaveDone();
-      }
-    });
-    const { data: ready, error: readyError } = await sb.rpc("customer_auth_ready");
-    customerAuthStatus = !readyError && ready === true ? "ready" : readyError?.code === "PGRST202" ? "legacy" : "error";
-    if (customerAuthStatus === "error") $("authMessage").textContent = "ตรวจสอบระบบบัญชีไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง";
-    else if (customerAuthStatus === "legacy") $("authMessage").textContent = "ระบบบัญชีลูกค้ายังไม่พร้อม กรุณารัน schema.sql เวอร์ชันล่าสุดใน Supabase";
-    const { data: authData } = await sb.auth.getSession();
-    session = authData.session;
-    renderCustomerAccount(); renderShop();
-    if (session) await loadOrderHistory();
+    sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     await loadMenu();
     await loadSettings();
     sb.channel("shop-settings")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "settings" }, p => { settings = p.new; renderShop(); })
       .subscribe();
     setInterval(() => { loadSettings(); }, 60000);          // also rolls the time slots forward
-    setInterval(() => { if (session) loadOrderHistory(); }, 60000);
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { loadSettings(); refreshStatus(); if (session) loadOrderHistory(); } });
-    restoreLastOrder();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { loadSettings(); refreshStatus(); } });
+    try {
+      const last = JSON.parse(localStorage.getItem(LAST) || "null");
+      if (last && last.id && last.date === bkk().date) showDone(last.id);
+    } catch (e) {}
   }
 
   /* ---------- events ---------- */
-  $("customerAuthForm").addEventListener("submit", submitCustomerAuth);
-  $("authSwitch").addEventListener("click", () => {
-    authMode = authMode === "login" ? "signup" : "login";
-    $("authMessage").textContent = "";
-    $("customerPassword").autocomplete = authMode === "signup" ? "new-password" : "current-password";
-    renderCustomerAccount();
-  });
-  $("customerLogout").addEventListener("click", async () => {
-    const { error } = await sb.auth.signOut();
-    if (error) $("authMessage").textContent = "ออกจากระบบไม่สำเร็จ กรุณาลองใหม่";
-  });
   $("receiptFile").addEventListener("change", e => {
     const file = e.target.files[0], preview = $("receiptPreview"), button = $("claimPaid");
     button.disabled = !file;
