@@ -126,8 +126,8 @@ insert into public.menu (id, name, cat, price, sort) values
   ('chicken',   'ลูกชิ้นไก่',          'yum', 10, 5),
   ('fishball',  'ลูกชิ้นปลา',          'yum', 10, 6),
   ('thaitea',   'ชาไทย',              'tea', 30, 7),
-  ('thaitea-lemon', 'ชาไทยมะนาว',     'tea', 10, 8),
-  ('thaitea-honey', 'ชาไทยน้ำผึ้งมะนาว', 'tea', 10, 9)
+  ('thaitea-lemon', 'ชาไทยมะนาว',     'tea', 30, 8),
+  ('thaitea-honey', 'ชาไทยน้ำผึ้งมะนาว', 'tea', 30, 9)
 on conflict (id) do update set name = excluded.name, cat = excluded.cat, price = excluded.price, sort = excluded.sort;
 -- Remove old menu items
 delete from public.menu where id in ('jasmine', 'honey');
