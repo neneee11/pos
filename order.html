@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121512">
 <title>สั่งยำดิวะล่วงหน้า</title>
-<meta name="description" content="สั่งยำลูกชิ้นและชามะลิล่วงหน้า แล้วมารับที่หน้าร้าน เปิด 16:30–20:30">
+<meta name="description" content="สั่งยำลูกชิ้นและชาไทยล่วงหน้า แล้วมารับที่หน้าร้าน เปิด 16:30–20:30">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23f0b44c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -181,7 +181,7 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
         <div class="chips" id="spice"></div>
       </section>
       <section class="panel">
-        <h2>ชามะลิ</h2>
+        <h2>ชาไทย</h2>
         <p class="hint">ราคาต่อแก้ว</p>
         <div id="menu-tea"></div>
       </section>
@@ -261,12 +261,14 @@ h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; text-wr
 <script>
 (function () {
   "use strict";
-  const IMG = { crab: "yum.jpg", red: "yum.jpg", lava: "yum.jpg", pork: "yum.jpg", chicken: "yum.jpg", jasmine: "jasmine.jpg", honey: "honey.jpg" };
+  const IMG = { crab: "yum.jpg", red: "yum.jpg", lava: "yum.jpg", pork: "yum.jpg", chicken: "yum.jpg", fishball: "yum.jpg", thaitea: "thaitea.jpg", "thaitea-lemon": "thaitea.jpg", "thaitea-honey": "thaitea.jpg" };
   const FALLBACK_MENU = [
-    { id: "crab", name: "ปูอัด", cat: "yum", price: 15 }, { id: "red", name: "ไส้กรอกแดง", cat: "yum", price: 15 },
-    { id: "lava", name: "ไส้กรอกชีสลาวา", cat: "yum", price: 20 }, { id: "pork", name: "ลูกชิ้นหมู", cat: "yum", price: 15 },
-    { id: "chicken", name: "ลูกชิ้นไก่", cat: "yum", price: 15 }, { id: "jasmine", name: "ชามะลิ", cat: "tea", price: 25 },
-    { id: "honey", name: "ชามะลิน้ำผึ้งมะนาว", cat: "tea", price: 30 }
+    { id: "crab", name: "ปูอัด", cat: "yum", price: 10 }, { id: "red", name: "ไส้กรอกแดง", cat: "yum", price: 10 },
+    { id: "lava", name: "ไส้กรอกชีสลาวา", cat: "yum", price: 10 }, { id: "pork", name: "ลูกชิ้นหมู", cat: "yum", price: 10 },
+    { id: "chicken", name: "ลูกชิ้นไก่", cat: "yum", price: 10 }, { id: "fishball", name: "ลูกชิ้นปลา", cat: "yum", price: 10 },
+    { id: "thaitea", name: "ชาไทย", cat: "tea", price: 30 },
+    { id: "thaitea-lemon", name: "ชาไทยมะนาว", cat: "tea", price: 10 },
+    { id: "thaitea-honey", name: "ชาไทยน้ำผึ้งมะนาว", cat: "tea", price: 10 }
   ];
   const SPICE = ["ไม่เผ็ด", "เผ็ดน้อย", "เผ็ดกลาง", "เผ็ดมาก"];
   const ERR = {

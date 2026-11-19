@@ -119,14 +119,18 @@ create table if not exists public.menu (
   sort       integer not null default 0
 );
 insert into public.menu (id, name, cat, price, sort) values
-  ('crab',    'ปูอัด',              'yum', 15, 1),
-  ('red',     'ไส้กรอกแดง',         'yum', 15, 2),
-  ('lava',    'ไส้กรอกชีสลาวา',     'yum', 20, 3),
-  ('pork',    'ลูกชิ้นหมู',          'yum', 15, 4),
-  ('chicken', 'ลูกชิ้นไก่',          'yum', 15, 5),
-  ('jasmine', 'ชามะลิ',              'tea', 25, 6),
-  ('honey',   'ชามะลิน้ำผึ้งมะนาว',  'tea', 30, 7)
+  ('crab',      'ปูอัด',              'yum', 10, 1),
+  ('red',       'ไส้กรอกแดง',         'yum', 10, 2),
+  ('lava',      'ไส้กรอกชีสลาวา',     'yum', 10, 3),
+  ('pork',      'ลูกชิ้นหมู',          'yum', 10, 4),
+  ('chicken',   'ลูกชิ้นไก่',          'yum', 10, 5),
+  ('fishball',  'ลูกชิ้นปลา',          'yum', 10, 6),
+  ('thaitea',   'ชาไทย',              'tea', 30, 7),
+  ('thaitea-lemon', 'ชาไทยมะนาว',     'tea', 10, 8),
+  ('thaitea-honey', 'ชาไทยน้ำผึ้งมะนาว', 'tea', 10, 9)
 on conflict (id) do update set name = excluded.name, cat = excluded.cat, price = excluded.price, sort = excluded.sort;
+-- Remove old menu items
+delete from public.menu where id in ('jasmine', 'honey');
 alter table public.menu enable row level security;
 drop policy if exists "anyone reads menu" on public.menu;
 drop policy if exists "staff edits menu" on public.menu;
